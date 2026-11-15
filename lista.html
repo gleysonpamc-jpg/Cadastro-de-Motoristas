@@ -179,7 +179,7 @@ function campo([nome, rot, tipo]) {
 document.getElementById('campos').innerHTML =
   GRUPOS.map(g => '<fieldset><legend>' + g[0] + '</legend><div class="grid">' + g[1].map(campo).join('') + '</div></fieldset>').join('') +
   '<fieldset><legend>Documentos <small>(anexar um arquivo novo substitui o atual; fotos viram PDF sozinhas)</small></legend><div class="grid">' +
-  DOCS.map(d => '<div class="doc"><b>' + d[0] + '</b>' + d[1].map(campo).join('') + (d[2] === 'CRLV' ? '<small>O prazo de renovação vem da aba "Calendário CRLV" (UF + final da placa + ano).</small>' : '') + (d[2] === 'ANTT' ? '<div><a href="https://www.gov.br/pt-br/servicos/consultar-situacao-de-transportador-no-rntrc" target="_blank" rel="noopener">Consultar na ANTT ↗</a></div>' : '') +
+  DOCS.map(d => '<div class="doc"><b>' + d[0] + '</b>' + d[1].map(campo).join('') + (d[2] === 'CRLV' ? '<small>O prazo de renovação vem da aba "Calendário CRLV" (UF + final da placa + ano).</small>' : '') + (d[2] === 'ANTT' ? '<div><a href="https://consultapublica.antt.gov.br/Site/ConsultaRNTRC.aspx/ConsultaPublica/" target="_blank" rel="noopener">Consultar na ANTT ↗</a></div>' : '') +
     (d[2] ? '<label>' + (d[2] === 'CONTRATO PAMC' ? 'PDF ou Word' : 'PDF ou foto') + '<input type="file" ' + (d[2] === 'CONTRATO PAMC' ? 'accept=".pdf,.doc,.docx" data-aceita="pdf,doc,docx"' : 'accept="application/pdf,image/*"') + ' data-tipo="' + d[2] + '"' +
       (d[1][0][2] === 'check' ? ' data-check="k_' + d[1][0][0] + '"' : '') + '></label><div data-link="' + d[3] + '"></div>' : '') +
     '</div>').join('') + '</div></fieldset>';
