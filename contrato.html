@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<title>Contrato</title>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body{font-family:Arial,sans-serif;background:#f3f4f6;margin:0;padding:12px;color:#222}
+  .nav{max-width:900px;margin:0 auto 10px;display:flex;gap:8px;flex-wrap:wrap}
+  .nav a{padding:8px 16px;border-radius:8px;background:#fff;color:#1f7a3f;text-decoration:none;font-weight:bold;box-shadow:0 1px 3px #0002}
+  .nav a.on{background:#1f7a3f;color:#fff}
+  .box{max-width:900px;margin:auto;background:#fff;padding:18px;border-radius:10px;box-shadow:0 1px 6px #0002}
+  h2{margin-top:0;color:#1f7a3f}
+  .busca{display:grid;grid-template-columns:1fr 2fr;gap:10px}
+  label{font-size:13px;display:block}
+  input,select{width:100%;box-sizing:border-box;padding:8px;margin-top:3px;border:1px solid #bbb;border-radius:6px;font-size:15px}
+  .acoes{display:none;gap:10px;margin:14px 0;flex-wrap:wrap}
+  button{background:#1f7a3f;color:#fff;border:0;padding:11px 16px;border-radius:8px;font-size:14px;cursor:pointer;flex:1;min-width:170px}
+  button.sec{background:#0b4f7a}button.cz{background:#666}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  #status{margin:10px 0;font-size:14px}
+  .tag{display:inline-block;border-radius:10px;padding:2px 10px;font-size:12px;font-weight:bold;margin-right:6px}
+  .t-ok{background:#e0f2e5;color:#1b6b34}.t-ruim{background:#fde8e8;color:#c62828}.t-av{background:#fff3cd;color:#8a6d00}
+  .falta{color:#c62828;font-weight:bold;font-size:13px;margin:6px 0}
+  #msg{font-weight:bold;margin:8px 0}
+  .papel{background:#fcfcfc;border:1px solid #ddd;border-radius:6px;padding:22px 30px;margin-top:10px;font-family:'Times New Roman',serif;font-size:15px;line-height:1.35;max-height:70vh;overflow-y:auto}
+  .papel .contrato p{margin:0 0 8px;white-space:pre-wrap}
+  .nota{font-size:12px;color:#777;margin-top:6px}
+  .nav{position:sticky;top:0;z-index:10;background:#f3f4f6;margin-top:-12px!important;padding:12px 0 8px}
+  /* menu lateral: faixa de ícones; ao abrir (☰) ele cobre a tela e recolhe sozinho ao clicar fora */
+  body.comMenu{padding-left:68px!important}
+  .side{position:fixed;left:0;top:0;bottom:0;width:56px;background:#1f7a3f;z-index:40;display:flex;flex-direction:column;gap:2px;padding:8px 6px;box-sizing:border-box;overflow:hidden;transition:width .15s,box-shadow .15s}
+  body.menuAberto .side{width:190px;box-shadow:4px 0 18px #0005}
+  .side a{color:#fff;text-decoration:none;padding:10px 12px;border-radius:8px;display:flex;gap:10px;align-items:center;white-space:nowrap;font-weight:bold;font-size:14px}
+  .side a:hover{background:#2f9b57}.side a.on{background:#fff;color:#1f7a3f}
+  .side .ic{width:22px;text-align:center;flex:none}
+  .sideBtn{background:none!important;border:0;color:#fff;font-size:20px;text-align:left;padding:8px 12px!important;cursor:pointer;width:auto!important;min-width:0!important;flex:none!important;margin-bottom:6px}
+  body:not(.menuAberto) .side .tx{display:none}
+  @media print{body.comMenu{padding-left:0!important}.side{display:none!important}}
+</style>
+</head>
+<body>
+<aside class="side" id="side"><button type="button" class="sideBtn" onclick="alternarMenu()" title="Minimizar ou expandir o menu">☰</button><a href="novo.html" target="_top" title="Cadastro"><span class="ic">🏠</span><span class="tx">Cadastro</span></a><a href="index.html" target="_top" title="Dashboard"><span class="ic">📊</span><span class="tx">Dashboard</span></a><a href="lista.html" target="_top" title="Lista"><span class="ic">📋</span><span class="tx">Lista</span></a><a href="consulta.html" target="_top" title="Consulta"><span class="ic">🔎</span><span class="tx">Consulta</span></a><a href="editar.html" target="_top" title="Editar"><span class="ic">✏️</span><span class="tx">Editar</span></a><a href="ficha.html" target="_top" title="Ficha"><span class="ic">📄</span><span class="tx">Ficha</span></a><a class="on" href="contrato.html" target="_top" title="Contrato"><span class="ic">📑</span><span class="tx">Contrato</span></a><a href="painel.html" target="_top" title="Painel"><span class="ic">⚙️</span><span class="tx">Painel</span></a></aside><script>(function(){var b=document.body;b.classList.add("comMenu");window.alternarMenu=function(){b.classList.toggle("menuAberto");};document.addEventListener("click",function(e){var s=document.getElementById("side");if(b.classList.contains("menuAberto")&&s&&!s.contains(e.target))b.classList.remove("menuAberto");});document.addEventListener("keydown",function(e){if(e.key==="Escape")b.classList.remove("menuAberto");});})();</script>
+<div class="box">
+  <h2>Contrato de transporte</h2>
+  <div class="busca">
+    <label>Filtrar<input id="filtro" placeholder="nome ou código"></label>
+    <label>Cadastro<select id="sel"><option>Carregando...</option></select></label>
+  </div>
+  <label style="margin-top:10px">Documento
+    <select id="doc"><option value="contrato">Contrato de transporte (no nome do proprietário)</option><option value="termo">Termo do motorista (1 folha) — quando o proprietário é outra pessoa</option></select>
+  </label>
+  <div id="status"></div>
+  <div id="faltas"></div>
+  <div class="acoes" id="acoes">
+    <button id="bdocx" onclick="baixar('docx')">Baixar DOCX (idêntico ao modelo)</button>
+    <button id="bpdf" class="sec" onclick="baixar('pdf')">Baixar PDF</button>
+    <button id="bpasta" class="cz" onclick="salvarPasta()">Salvar na pasta do motorista</button>
+  </div>
+  <div id="msg"></div>
+  <div class="papel" id="papel" style="display:none"></div>
+  <div class="nota" id="nota" style="display:none">O contrato sai com a data de hoje. O DOCX é o seu modelo com os campos trocados; o PDF é convertido pelo Google e pode ter pequenas diferenças de diagramação.</div>
+</div>
+
+<script>
+const KEY = "";
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sel = document.getElementById('sel'), msg = document.getElementById('msg'), filtro = document.getElementById('filtro');
+let lista = [], atual = null;
+const qual = () => document.getElementById('doc').value;
+const aviso = (t, cor) => { msg.style.color = cor || '#333'; msg.textContent = t; };
+
+function mostrarLista() {
+  const q = filtro.value.trim().toLowerCase(), v = sel.value;
+  const itens = lista.filter(m => !q || ((m.codReal || 'sem codigo') + ' ' + m.nome).toLowerCase().includes(q));
+  sel.innerHTML = '<option value="">Selecione</option>' + itens.map(m => '<option value="' + esc(m.cod) + '">' + (m.codReal ? esc(m.codReal) : 'sem código') + ' - ' + esc(m.nome) + (/inativo/i.test(m.status) ? ' (inativo)' : '') + '</option>').join('');
+  sel.value = v;
+}
+google.script.run.withSuccessHandler(l => { lista = l; mostrarLista(); })
+  .withFailureHandler(e => sel.innerHTML = '<option>Erro: ' + esc(e.message) + '</option>').listarMotoristas(KEY, true);
+filtro.oninput = mostrarLista;
+
+let reqId = 0;                                   // ignora respostas antigas se você trocar de cadastro/documento rápido
+function carregar() {
+  const meu = ++reqId;
+  atual = null; aviso('');
+  ['acoes', 'papel', 'nota'].forEach(i => document.getElementById(i).style.display = 'none');
+  document.getElementById('status').innerHTML = ''; document.getElementById('faltas').innerHTML = '';
+  if (!sel.value) return;
+  aviso('Carregando o contrato...');
+  google.script.run.withSuccessHandler(r => {
+    if (meu !== reqId) return;
+    atual = r; aviso('');
+    if (r.dispensado) {                                   // termo não se aplica: o proprietário é o próprio motorista
+      ['acoes', 'papel', 'nota'].forEach(i => document.getElementById(i).style.display = 'none');
+      document.getElementById('faltas').innerHTML = '';
+      document.getElementById('status').innerHTML = '<span class="tag t-av">Não é necessário: o proprietário é o próprio motorista</span>';
+      return;
+    }
+    const nomeDoc = r.qual === 'termo' ? 'Termo' : 'Contrato';
+    document.getElementById('status').innerHTML =
+      (r.aceitou ? '<span class="tag t-ok">Aceito' + (r.aceite ? ' em ' + esc(r.aceite) : '') + '</span>' : '<span class="tag t-av">Ainda não aceito</span>') +
+      (r.outro ? '<span class="tag t-av">Contrato no nome de: ' + esc(r.proprietario) + '</span>' : '') +
+      (r.link ? '<a href="' + esc(r.link) + '" target="_blank">' + nomeDoc + ' na pasta do Drive</a>' : '<span class="tag t-av">Sem arquivo na pasta</span>');
+    const falta = r.faltandoMotorista.map(x => 'do motorista: ' + x).concat(r.faltandoEmpresa.map(x => 'da empresa (Painel): ' + x));
+    document.getElementById('faltas').innerHTML = (r.erro ? '<div class="falta">' + esc(r.erro) + '</div>' : '') + (falta.length ? '<div class="falta">Faltam dados para gerar o contrato — ' + falta.map(esc).join('; ') + '.</div>' : '');
+    const ok = !falta.length && !r.erro;
+    document.getElementById('acoes').style.display = 'flex';
+    ['bdocx', 'bpdf', 'bpasta'].forEach(i => document.getElementById(i).disabled = !ok);
+    if (r.html) { const p = document.getElementById('papel'); p.innerHTML = r.html; p.style.display = 'block'; document.getElementById('nota').style.display = 'block'; }
+  }).withFailureHandler(e => aviso('Erro: ' + e.message, 'red')).contratoAdmin(KEY, sel.value, qual());
+}
+sel.onchange = carregar;
+document.getElementById('doc').onchange = carregar;
+
+function baixarBase64(nome, b64, mime) {
+  const bin = atob(b64), bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([bytes], { type: mime })); a.download = nome;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+function baixar(formato) {
+  const b = document.getElementById(formato === 'pdf' ? 'bpdf' : 'bdocx'); b.disabled = true; aviso('Gerando ' + formato.toUpperCase() + '...');
+  google.script.run.withSuccessHandler(r => { b.disabled = false; baixarBase64(r.nome, r.base64, r.mime); aviso('Download iniciado: ' + r.nome, 'green'); })
+    .withFailureHandler(e => { b.disabled = false; aviso('Erro: ' + e.message, 'red'); }).baixarContrato(KEY, sel.value, formato, qual());
+}
+function salvarPasta() {
+  const b = document.getElementById('bpasta'); b.disabled = true; aviso('Salvando na pasta...');
+  google.script.run.withSuccessHandler(r => { b.disabled = false; aviso('Documento salvo na pasta do motorista (com a data de hoje).', 'green'); carregar(); })
+    .withFailureHandler(e => { b.disabled = false; aviso('Erro: ' + e.message, 'red'); }).salvarContratoPasta(KEY, sel.value, qual());
+}
+</script>
+</body>
+</html>

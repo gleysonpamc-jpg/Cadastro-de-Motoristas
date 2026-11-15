@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<title>Dashboard</title>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{font-family:Arial,sans-serif;background:#f3f4f6;margin:0;padding:12px;color:#222}
+  .nav{max-width:1200px;margin:0 auto 10px;display:flex;gap:8px;flex-wrap:wrap}
+  .nav a{padding:8px 16px;border-radius:8px;background:#fff;color:#1f7a3f;text-decoration:none;font-weight:bold;box-shadow:0 1px 3px #0002}
+  .nav a.on{background:#1f7a3f;color:#fff}
+  .wrap{max-width:1200px;margin:auto}
+  .topo{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+  h2{margin:0;color:#1f7a3f}
+  .ctl{display:flex;gap:12px;align-items:center;font-size:14px}
+  button{background:#1f7a3f;color:#fff;border:0;padding:8px 14px;border-radius:8px;font-size:14px;cursor:pointer}
+  button.sec{background:#0b4f7a}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+  .kpi{background:#fff;border-radius:10px;padding:12px 14px;box-shadow:0 1px 4px #0002}
+  .kpi b{display:block;font-size:28px;color:#1f7a3f;line-height:1.1}
+  .kpi span{font-size:12px;color:#666}
+  .kpi.alerta b{color:#c62828}.kpi.aviso b{color:#b26a00}
+  .grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px}
+  .card{background:#fff;border-radius:10px;padding:14px 16px;box-shadow:0 1px 4px #0002}
+  .card h3{margin:0 0 10px;font-size:15px;color:#1f7a3f}
+  .card.larga{grid-column:1/-1}
+  .lin{display:grid;grid-template-columns:120px 1fr 56px;gap:8px;align-items:center;font-size:13px;margin:5px 0}
+  .trilho{background:#eceff1;border-radius:6px;height:16px;overflow:hidden;display:flex}
+  .trilho i{display:block;height:100%}
+  .v{text-align:right;font-weight:bold}
+  .ok{background:#2e7d32}.warn{background:#f59e0b}.bad{background:#c62828}.nd{background:#9e9e9e}.az{background:#1f7a3f}
+  .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .tile{border-radius:8px;padding:10px;color:#fff}
+  .tile b{display:block;font-size:26px}.tile span{font-size:12px}
+  .leg{font-size:12px;color:#555;margin-top:8px;display:flex;gap:12px;flex-wrap:wrap}
+  .leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th{background:#1f7a3f;color:#fff;text-align:left;padding:6px 8px}
+  td{border-bottom:1px solid #e5e5e5;padding:5px 8px}
+  .pill{border-radius:10px;padding:1px 8px;font-size:11px;font-weight:bold;color:#fff;white-space:nowrap}
+  #msg{font-size:13px;color:#555;margin:6px 0}
+  @media print{
+    body{background:#fff;padding:0}
+    .nav,.ctl{display:none!important}
+    .card,.kpi{box-shadow:none;border:1px solid #ddd;break-inside:avoid}
+  }
+  /* abas fixas: só o conteúdo abaixo delas rola */
+  .nav{position:sticky;top:0;z-index:10;background:#f3f4f6;margin-top:-12px!important;padding:12px 0 8px}
+  /* menu lateral: faixa de ícones; ao abrir (☰) ele cobre a tela e recolhe sozinho ao clicar fora */
+  body.comMenu{padding-left:68px!important}
+  .side{position:fixed;left:0;top:0;bottom:0;width:56px;background:#1f7a3f;z-index:40;display:flex;flex-direction:column;gap:2px;padding:8px 6px;box-sizing:border-box;overflow:hidden;transition:width .15s,box-shadow .15s}
+  body.menuAberto .side{width:190px;box-shadow:4px 0 18px #0005}
+  .side a{color:#fff;text-decoration:none;padding:10px 12px;border-radius:8px;display:flex;gap:10px;align-items:center;white-space:nowrap;font-weight:bold;font-size:14px}
+  .side a:hover{background:#2f9b57}.side a.on{background:#fff;color:#1f7a3f}
+  .side .ic{width:22px;text-align:center;flex:none}
+  .sideBtn{background:none!important;border:0;color:#fff;font-size:20px;text-align:left;padding:8px 12px!important;cursor:pointer;width:auto!important;min-width:0!important;flex:none!important;margin-bottom:6px}
+  body:not(.menuAberto) .side .tx{display:none}
+  @media print{body.comMenu{padding-left:0!important}.side{display:none!important}}
+  .clk{cursor:pointer}.kpi.clk:hover,.tile.clk:hover{outline:2px solid #1f7a3f}.lin.clk:hover{background:#f1f8f3}
+  .lin.ic{grid-template-columns:170px 1fr 56px}
+  .lin .nm{display:flex;align-items:center;gap:6px}.vi{color:#1f7a3f;flex:none;display:inline-flex}
+  .ov{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;z-index:60;padding:10px;box-sizing:border-box}
+  .ov.aberto{display:flex}
+  .ovb{background:#fff;border-radius:10px;width:min(860px,100%);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 8px 30px #0005}
+  .ovh{display:flex;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid #ddd}
+  .ovh b{color:#1f7a3f;font-size:16px;flex:1}.ovh input{padding:6px 8px;border:1px solid #bbb;border-radius:6px;font-size:14px;width:190px}
+  .ovh button{background:#eee;color:#333;padding:6px 12px}
+  #ovc{overflow:auto;padding:4px 16px 14px}
+  #ovc .vi{vertical-align:middle;margin-right:4px}
+  #ovc a.ed{color:#0b4f7a;text-decoration:none;font-weight:bold;white-space:nowrap}
+  #ovc a.ed:hover{text-decoration:underline}
+  .ovn{font-size:12px;color:#666;padding:6px 16px 0}
+  .vg{display:flex;gap:10px;align-items:flex-end;overflow-x:auto;padding:26px 4px 2px}
+  .vc{display:flex;flex-direction:column;align-items:center;min-width:92px;flex:1}
+  .vb{position:relative;width:48px;height:200px;background:#eef2ee;border-radius:6px 6px 0 0}
+  .vb i{position:absolute;left:0;right:0;bottom:0;background:#1f7a3f;border-radius:6px 6px 0 0}
+  .vp{position:absolute;left:50%;transform:translateX(-50%);font-size:13px;font-weight:bold;color:#1f7a3f;white-space:nowrap}
+  .vl{display:flex;align-items:center;gap:4px;margin-top:8px;font-size:17px;color:#222}
+  .vc small{color:#666;font-size:11px;text-align:center;margin-top:2px}
+  .vc.clk:hover .vb i{background:#2f9b57}
+</style>
+</head>
+<body>
+<aside class="side" id="side"><button type="button" class="sideBtn" onclick="alternarMenu()" title="Minimizar ou expandir o menu">☰</button><a href="novo.html" target="_top" title="Cadastro"><span class="ic">🏠</span><span class="tx">Cadastro</span></a><a class="on" href="index.html" target="_top" title="Dashboard"><span class="ic">📊</span><span class="tx">Dashboard</span></a><a href="lista.html" target="_top" title="Lista"><span class="ic">📋</span><span class="tx">Lista</span></a><a href="consulta.html" target="_top" title="Consulta"><span class="ic">🔎</span><span class="tx">Consulta</span></a><a href="editar.html" target="_top" title="Editar"><span class="ic">✏️</span><span class="tx">Editar</span></a><a href="ficha.html" target="_top" title="Ficha"><span class="ic">📄</span><span class="tx">Ficha</span></a><a href="contrato.html" target="_top" title="Contrato"><span class="ic">📑</span><span class="tx">Contrato</span></a><a href="painel.html" target="_top" title="Painel"><span class="ic">⚙️</span><span class="tx">Painel</span></a></aside><script>(function(){var b=document.body;b.classList.add("comMenu");window.alternarMenu=function(){b.classList.toggle("menuAberto");};document.addEventListener("click",function(e){var s=document.getElementById("side");if(b.classList.contains("menuAberto")&&s&&!s.contains(e.target))b.classList.remove("menuAberto");});document.addEventListener("keydown",function(e){if(e.key==="Escape")b.classList.remove("menuAberto");});})();</script>
+
+<div class="ov" id="ov"><div class="ovb">
+  <div class="ovh"><b id="ovt"></b><input id="ovq" placeholder="filtrar por nome ou código"><button type="button" onclick="fecharOv()">✕</button></div>
+  <div class="ovn" id="ovn"></div>
+  <div id="ovc"></div>
+</div></div>
+
+<div class="wrap">
+  <div class="topo">
+    <h2>Dashboard</h2>
+    <div class="ctl">
+      <label><input type="checkbox" id="soAtivos" checked> Somente ativos</label>
+      <button class="sec" onclick="carregar()">Atualizar</button>
+      <button onclick="window.print()">Imprimir</button>
+    </div>
+  </div>
+  <div id="msg">Carregando...</div>
+  <div class="kpis" id="kpis"></div>
+  <div class="grade" id="grade"></div>
+</div>
+
+<script>
+const KEY = "";
+const BASE = '';
+let TIPOS = ['FIORINO', 'KOMBI', 'VAN', 'CAMINHÃO 3/4', 'CARRETA'];   // o Painel é quem define a lista
+const DOCS = [['CNH-DATA DE VALIDADE', 'CNH'], ['CRLV', 'CRLV'], ['ANTT', 'ANTT'], ['CVV: VIGILANCIA', 'Vigilância'], ['NADA COSTA', 'Nada Costa'], ['RESIDENCIA', 'Residência'], ['CONTRATO PAMC', 'Contrato PAMC']];
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ativoDe = x => !/inativo/i.test(x.status || '');
+const contar = (lista, chave) => { const m = {}; lista.forEach(x => { const k = chave(x); m[k] = (m[k] || 0) + 1; }); return m; };
+let TODOS = [];
+
+// Todos os números do painel saem daqui (função pura, fácil de conferir)
+function calcular(todos, soAtivos, anoAtual) {
+  const base = soAtivos ? todos.filter(ativoDe) : todos;
+  const r = { base: base.length, total: todos.length, ativos: todos.filter(ativoDe).length, semCod: todos.filter(x => !x.cod).length };
+  r.inativos = r.total - r.ativos;
+  const veic = base.filter(x => x.placa || x.tipo);
+  r.veiculos = veic.length;
+  r.porTipo = contar(veic, x => x.tipo || 'Sem tipo');
+  r.carga = veic.reduce((s, x) => s + (x.carga || 0), 0);
+  const anos = veic.filter(x => x.ano > 1950).map(x => anoAtual - x.ano);
+  r.idadeMedia = anos.length ? anos.reduce((a, b) => a + b, 0) / anos.length : null;
+  r.faixas = { 'Até 5 anos': 0, '6 a 10 anos': 0, '11 a 15 anos': 0, 'Mais de 15 anos': 0, 'Sem ano': 0 };
+  veic.forEach(x => {
+    if (!(x.ano > 1950)) r.faixas['Sem ano']++;
+    else { const i = anoAtual - x.ano; r.faixas[i <= 5 ? 'Até 5 anos' : i <= 10 ? '6 a 10 anos' : i <= 15 ? '11 a 15 anos' : 'Mais de 15 anos']++; }
+  });
+  const est = (x, k) => (x.docs && x.docs[k] && x.docs[k].e) || 'falta';
+  r.cnh = { vencido: 0, vence: 0, ok: 0, falta: 0 };
+  base.forEach(x => r.cnh[est(x, 'CNH-DATA DE VALIDADE')]++);
+  r.docs = DOCS.map(d => { const c = { ok: 0, vence: 0, vencido: 0, falta: 0 }; base.forEach(x => c[est(x, d[0])]++); return { nome: d[1], c: c }; });
+  r.emDia = base.filter(x => DOCS.every(d => est(x, d[0]) === 'ok')).length;
+  r.atencao = [];
+  base.forEach(x => DOCS.forEach(d => {
+    const s = x.docs && x.docs[d[0]];
+    if (s && (s.e === 'vencido' || s.e === 'vence') && (s.d != null || s.m)) r.atencao.push({ nome: x.nome, cod: x.cod, doc: d[1], e: s.e, d: s.d, t: s.t, m: s.m });
+  }));
+  r.atencao.sort((a, b) => (a.d == null ? -99999 : a.d) - (b.d == null ? -99999 : b.d));   // ANTT inativa (sem dias) vem primeiro
+  r.pendentes = base.length - r.emDia;
+  r.porUF = contar(base.filter(x => x.placa || x.tipo || true), x => x.uf || 'Sem UF');
+  return r;
+}
+
+const kpi = (n, rot, cls, acao) => '<div class="kpi ' + (cls || '') + (acao ? ' clk' : '') + '"' + (acao ? ' data-a="' + acao + '" title="Clique para ver a lista"' : '') + '><b>' + n + '</b><span>' + rot + '</span></div>';
+const fmt = n => Number(n).toLocaleString('pt-BR');
+function barras(obj, ordem, cor, total, pref, icone) {
+  const max = Math.max(1, ...ordem.map(k => obj[k] || 0));
+  return ordem.map(k => '<div class="lin' + (icone ? ' ic' : '') + (pref ? ' clk' : '') + '"' + (pref ? ' data-a="' + esc(pref + ':' + k) + '"' : '') + '><span class="nm">' + (icone ? iconeTipo(k) : '') + esc(k) + '</span><div class="trilho"><i class="' + cor + '" style="width:' + ((obj[k] || 0) / max * 100) + '%"></i></div><span class="v">' + (obj[k] || 0) +
+    (total ? ' <small style="color:#888;font-weight:normal">' + Math.round((obj[k] || 0) / total * 100) + '%</small>' : '') + '</span></div>').join('');
+}
+function textoDias(a) { return a.m ? a.m.charAt(0).toUpperCase() + a.m.slice(1) : (a.e === 'vencido' ? 'Vencido há ' + a.t : (a.d === 0 ? 'Vence hoje' : 'Vence em ' + a.t)); }
+function textoSit(s) {
+  if (!s) return 'faltando';
+  if (s.m && s.e !== 'ok') return s.m;
+  return { ok: s.t ? 'em dia — vence em ' + s.t : 'em dia', vence: s.d === 0 ? 'vence hoje' : 'vence em ' + s.t, vencido: 'vencido há ' + s.t, falta: 'faltando' }[s.e];
+}
+
+// ---------- ícones dos veículos (escolhidos pelo nome do tipo; tipos novos ganham ícone sozinhos) ----------
+const ICONES = {
+  fiorino: '<path d="M3 9a2 2 0 0 1 2-2h29l9 8h11a3 3 0 0 1 3 3v8H3z"/><path fill="#fff" d="M36 9.5 41.5 15H36z"/><circle cx="16" cy="26" r="5" fill="currentColor" stroke="#fff" stroke-width="2"/><circle cx="47" cy="26" r="5" fill="currentColor" stroke="#fff" stroke-width="2"/>',
+  kombi: '<path d="M4 20c0-8 4-14 12-14h26c7 0 12 5 14 12v8H4z"/><path fill="#fff" d="M9 12c1-3 3-4 6-4h6v7H8zM24 8h8v7h-8zM35 8h7c3 0 5 2 6 5v2H35z"/><path fill="#fff" d="M4 19h56v2H4z"/><circle cx="16" cy="27" r="5" fill="currentColor" stroke="#fff" stroke-width="2"/><circle cx="48" cy="27" r="5" fill="currentColor" stroke="#fff" stroke-width="2"/>',
+  van: '<path d="M3 5a2 2 0 0 1 2-2h35l15 11a3 3 0 0 1 3 2v12H3z"/><path fill="#fff" d="M42 6l9 7H42z"/><path fill="#fff" d="M8 8h6v6H8zM17 8h6v6h-6z"/><circle cx="16" cy="27" r="5" fill="currentColor" stroke="#fff" stroke-width="2"/><circle cx="46" cy="27" r="5" fill="currentColor" stroke="#fff" stroke-width="2"/>',
+  caminhao: '<path d="M3 6a2 2 0 0 1 2-2h32a2 2 0 0 1 2 2v19H3z"/><path d="M41 11h9l8 8v6H41z"/><path fill="#fff" d="M44 13.5h5l5 5h-10z"/><circle cx="13" cy="27" r="5" fill="currentColor" stroke="#fff" stroke-width="2"/><circle cx="31" cy="27" r="5" fill="currentColor" stroke="#fff" stroke-width="2"/><circle cx="51" cy="27" r="5" fill="currentColor" stroke="#fff" stroke-width="2"/>',
+  carreta: '<path d="M1 5a2 2 0 0 1 2-2h38a2 2 0 0 1 2 2v17H1z"/><path d="M47 10h8l8 8v6H47z"/><path fill="#fff" d="M50 12.5h4l5 5h-9z"/><path d="M43 21h4v3h-4z"/><circle cx="8" cy="27" r="4.5" fill="currentColor" stroke="#fff" stroke-width="2"/><circle cx="20" cy="27" r="4.5" fill="currentColor" stroke="#fff" stroke-width="2"/><circle cx="34" cy="27" r="4.5" fill="currentColor" stroke="#fff" stroke-width="2"/><circle cx="53" cy="27" r="4.5" fill="currentColor" stroke="#fff" stroke-width="2"/>',
+  carro: '<path d="M4 20l5-9a4 4 0 0 1 3.5-2H42a4 4 0 0 1 3.5 2L51 20h6a3 3 0 0 1 3 3v3H4z"/><path fill="#fff" d="M14 12h12v7H11zM29 12h13l4 7H29z"/><circle cx="16" cy="27" r="5" fill="currentColor" stroke="#fff" stroke-width="2"/><circle cx="47" cy="27" r="5" fill="currentColor" stroke="#fff" stroke-width="2"/>',
+  moto: '<circle cx="13" cy="24" r="6.5" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="51" cy="24" r="6.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M13 24l9-10h14l8 10" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M20 14h16l4 9H22z"/><path d="M40 10h8l3 4-4 1-3-3h-4z"/>'
+};
+function chaveIcone(nome) {
+  const n = String(nome || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+  if (/CARRETA|BITREM|TRELI|RODOTREM|SEMI/.test(n)) return 'carreta';
+  if (/CAMINH|TOCO|TRUCK|BAU|VUC|3\/4|BITRUCK/.test(n)) return 'caminhao';
+  if (/KOMBI/.test(n)) return 'kombi';
+  if (/FIORINO|STRADA|SAVEIRO|UTILIT|PICAPE|PICK|HILUX|DOBLO|MONTANA|S10/.test(n)) return 'fiorino';
+  if (/VAN|SPRINTER|MASTER|DUCATO|BOXER|DAILY|TRANSIT/.test(n)) return 'van';
+  if (/MOTO/.test(n)) return 'moto';
+  if (/CARRO|SEDAN|HATCH|PASSEIO|SUV/.test(n)) return 'carro';
+  return 'van';
+}
+const iconeTipo = nome => '<span class="vi"><svg viewBox="0 0 64 34" width="40" height="22" fill="currentColor" aria-hidden="true">' + ICONES[chaveIcone(nome)] + '</svg></span>';
+
+// ---------- o que cada quadrado mostra ao clicar ----------
+const faixaDe = (x, ano) => !(x.ano > 1950) ? 'Sem ano' : (ano - x.ano <= 5 ? 'Até 5 anos' : ano - x.ano <= 10 ? '6 a 10 anos' : ano - x.ano <= 15 ? '11 a 15 anos' : 'Mais de 15 anos');
+function selecionar(todos, soAtivos, ano, a) {
+  const base = soAtivos ? todos.filter(ativoDe) : todos, veic = base.filter(x => x.placa || x.tipo);
+  const est = (x, k) => (x.docs && x.docs[k] && x.docs[k].e) || 'falta';
+  const partes = a.split(':'), t = partes[0], p = partes.slice(1).join(':');
+  const pendencias = x => DOCS.filter(d => est(x, d[0]) !== 'ok').map(d => d[1]).join(', ') || '—';
+  const R = (titulo, itens, extraT, extra) => ({ titulo: titulo, itens: itens, extraT: extraT || '', extra: extra || null });
+  switch (t) {
+    case 'todos': return R('Todos os cadastros', todos);
+    case 'ativos': return R('Cadastros ativos', todos.filter(ativoDe));
+    case 'inativos': return R('Cadastros inativos', todos.filter(x => !ativoDe(x)));
+    case 'semcod': return R('Sem código Flex', todos.filter(x => !x.cod));
+    case 'veiculos': return R('Veículos', veic);
+    case 'carga': return R('Carga máxima por veículo', veic.filter(x => x.carga > 0).sort((a, b) => b.carga - a.carga), 'Carga', x => fmt(x.carga) + ' kg');
+    case 'idade': return R('Idade dos veículos', veic.filter(x => x.ano > 1950).sort((a, b) => a.ano - b.ano), 'Ano', x => x.ano + ' (' + (ano - x.ano) + ' anos)');
+    case 'emdia': return R('Documentação 100% em dia', base.filter(x => DOCS.every(d => est(x, d[0]) === 'ok')));
+    case 'pend': return R('Com pendência de documento', base.filter(x => !DOCS.every(d => est(x, d[0]) === 'ok')), 'Pendências', pendencias);
+    case 'cnh': return R('CNH — ' + ({ vencido: 'vencidas', vence: 'vencem em até 30 dias', ok: 'em dia', falta: 'sem data cadastrada' }[p] || p), base.filter(x => est(x, 'CNH-DATA DE VALIDADE') === p), 'CNH', x => textoSit(x.docs && x.docs['CNH-DATA DE VALIDADE']));
+    case 'tipo': return R('Veículos: ' + p, veic.filter(x => (x.tipo || 'Sem tipo') === p));
+    case 'uf': return R('Cadastros em ' + p, base.filter(x => (x.uf || 'Sem UF') === p));
+    case 'faixa': return R('Idade da frota: ' + p, veic.filter(x => faixaDe(x, ano) === p), 'Ano', x => x.ano > 1950 ? String(x.ano) : '—');
+    case 'doc': { const d = DOCS[+p]; return R(d[1] + ' — vencidos, a vencer ou faltando', base.filter(x => est(x, d[0]) !== 'ok'), 'Situação', x => textoSit(x.docs && x.docs[d[0]])); }
+  }
+  return R('', []);
+}
+
+function desenhar() {
+  const r = calcular(TODOS, document.getElementById('soAtivos').checked, new Date().getFullYear());
+  const pct = r.base ? Math.round(r.emDia / r.base * 100) : 0;
+  document.getElementById('msg').textContent = r.base + ' cadastro(s) considerado(s)' + (document.getElementById('soAtivos').checked ? ' (somente ativos)' : '') + ' — atualizado em ' + new Date().toLocaleString('pt-BR');
+  document.getElementById('kpis').innerHTML =
+    kpi(r.total, 'Cadastros', '', 'todos') + kpi(r.ativos, 'Ativos', '', 'ativos') + kpi(r.inativos, 'Inativos', '', 'inativos') + kpi(r.semCod, 'Sem código Flex', r.semCod ? 'aviso' : '', 'semcod') +
+    kpi(r.veiculos, 'Veículos', '', 'veiculos') + kpi(fmt(Math.round(r.carga)) + ' kg', 'Carga máxima somada', '', 'carga') +
+    kpi(r.idadeMedia == null ? '—' : r.idadeMedia.toFixed(1).replace('.', ',') + ' anos', 'Idade média da frota', '', 'idade') +
+    kpi(pct + '%', 'Documentação 100% em dia (' + r.emDia + ' de ' + r.base + ')', '', 'emdia') +
+    kpi(r.pendentes, 'Com pendência de documento', r.pendentes ? 'alerta' : '', 'pend');
+
+  const tipos = TIPOS.concat(r.porTipo['Sem tipo'] ? ['Sem tipo'] : []).concat(Object.keys(r.porTipo).filter(k => k !== 'Sem tipo' && !TIPOS.includes(k)));
+  const cardTipo = '<div class="card"><h3>Veículos por tipo</h3>' + barras(r.porTipo, tipos, 'az', r.veiculos, 'tipo', true) + '</div>';
+
+  // gráfico de barras na vertical: % em cima da barra; embaixo o ícone do veículo e, ao lado, a quantidade
+  const maxTipo = Math.max(1, ...tipos.map(k => r.porTipo[k] || 0));
+  const cardGraf = '<div class="card larga"><h3>Veículos por tipo — gráfico</h3><div class="vg">' + tipos.map(k => {
+    const n = r.porTipo[k] || 0, h = n / maxTipo * 100, pc = r.veiculos ? Math.round(n / r.veiculos * 100) : 0;
+    return '<div class="vc clk" data-a="' + esc('tipo:' + k) + '" title="' + esc(k) + ': ' + n + ' (' + pc + '%)"><div class="vb"><i style="height:' + h + '%"></i><span class="vp" style="bottom:calc(' + h + '% + 4px)">' + pc + '%</span></div>' +
+      '<div class="vl">' + iconeTipo(k) + '<b>' + n + '</b></div><small>' + esc(k) + '</small></div>';
+  }).join('') + '</div></div>';
+  const cardCnh = '<div class="card"><h3>CNH — validade</h3><div class="tiles">' +
+    '<div class="tile bad clk" data-a="cnh:vencido"><b>' + r.cnh.vencido + '</b><span>Vencidas</span></div>' +
+    '<div class="tile warn clk" data-a="cnh:vence" style="color:#222"><b>' + r.cnh.vence + '</b><span>Vencem em até 30 dias</span></div>' +
+    '<div class="tile ok clk" data-a="cnh:ok"><b>' + r.cnh.ok + '</b><span>Em dia</span></div>' +
+    '<div class="tile nd clk" data-a="cnh:falta"><b>' + r.cnh.falta + '</b><span>Sem data cadastrada</span></div></div></div>';
+
+  const seg = (n, cls) => n ? '<i class="' + cls + '" style="width:' + (n / Math.max(1, r.base) * 100) + '%" title="' + n + '"></i>' : '';
+  const cardDocs = '<div class="card"><h3>Documentos por situação</h3>' + r.docs.map((d, i) =>
+    '<div class="lin clk" data-a="doc:' + i + '"><span>' + esc(d.nome) + '</span><div class="trilho">' + seg(d.c.ok, 'ok') + seg(d.c.vence, 'warn') + seg(d.c.vencido, 'bad') + seg(d.c.falta, 'nd') + '</div>' +
+    '<span class="v" title="em dia / a vencer / vencido / faltando">' + d.c.ok + '/' + d.c.vence + '/' + d.c.vencido + '/' + d.c.falta + '</span></div>').join('') +
+    '<div class="leg"><span><i class="ok"></i>Em dia</span><span><i class="warn"></i>Vence em até 30 dias</span><span><i class="bad"></i>Vencido</span><span><i class="nd"></i>Faltando</span></div></div>';
+
+  const cardFaixas = '<div class="card"><h3>Idade da frota</h3>' + barras(r.faixas, Object.keys(r.faixas), 'az', r.veiculos, 'faixa') + '</div>';
+  const ufs = Object.keys(r.porUF).sort((a, b) => r.porUF[b] - r.porUF[a]);
+  const cardUf = '<div class="card"><h3>Cadastros por UF (endereço)</h3>' + barras(r.porUF, ufs, 'az', r.base, 'uf') + '</div>';
+
+  const lista = r.atencao.slice(0, 20);
+  const cardAt = '<div class="card larga"><h3>Atenção: vencidos e a vencer em 30 dias (' + r.atencao.length + ')</h3>' +
+    (lista.length ? '<table><tr><th>Cód.</th><th>Nome</th><th>Documento</th><th>Situação</th></tr>' + lista.map(a =>
+      '<tr><td>' + esc(a.cod || '—') + '</td><td>' + esc(a.nome) + '</td><td>' + esc(a.doc) + '</td><td><span class="pill ' + (a.e === 'vencido' ? 'bad' : 'warn') + '"' + (a.e === 'vence' ? ' style="color:#222"' : '') + '>' + textoDias(a) + '</span></td></tr>').join('') + '</table>' +
+      (r.atencao.length > lista.length ? '<p style="font-size:12px;color:#666">Mostrando os 20 mais urgentes. A lista completa está na tela Lista (etiquetas vermelhas e amarelas).</p>' : '')
+      : '<p style="color:#2e7d32">Nenhum documento vencido ou perto de vencer.</p>') + '</div>';
+
+  document.getElementById('grade').innerHTML = cardAt + cardTipo + cardCnh + cardGraf + cardDocs + cardFaixas + cardUf;
+}
+
+function carregar() {
+  document.getElementById('msg').textContent = 'Carregando...';
+  google.script.run.withSuccessHandler(l => { TODOS = l; desenhar(); })
+    .withFailureHandler(e => document.getElementById('msg').textContent = 'Erro: ' + e.message).dashboard(KEY);
+}
+let OV = null;
+function desenharOv() {
+  if (!OV) return;
+  const q = document.getElementById('ovq').value.trim().toLowerCase();
+  const itens = OV.itens.filter(x => !q || (x.nome + ' ' + (x.proprietario || '') + ' ' + (x.cod || 'sem codigo')).toLowerCase().includes(q));
+  document.getElementById('ovn').textContent = itens.length + ' de ' + OV.itens.length + ' cadastro(s)';
+  document.getElementById('ovc').innerHTML = itens.length ? '<table><tr><th>Cód.</th><th>Nome</th><th>Tipo</th><th>Placa</th>' + (OV.extra ? '<th>' + esc(OV.extraT) + '</th>' : '') + '<th></th></tr>' + itens.map(x =>
+    '<tr><td>' + esc(x.cod || '—') + '</td><td>' + esc(x.nome) + (x.proprietario ? '<br><small style="color:#777">prop.: ' + esc(x.proprietario) + '</small>' : '') + '</td><td>' + (x.tipo ? iconeTipo(x.tipo) + ' ' + esc(x.tipo) : '—') + '</td><td>' + esc(x.placa || '—') + '</td>' +
+    (OV.extra ? '<td>' + esc(OV.extra(x)) + '</td>' : '') +
+    '<td><a class="ed" target="_top" href="' + esc('lista.html?abrir=' + encodeURIComponent(x.id)) + '" title="Abrir este cadastro para editar">✏️ Editar</a></td></tr>').join('') + '</table>'
+    : '<p style="color:#666;padding:14px 0">Nenhum cadastro nesta divisão.</p>';
+}
+function abrirOv(a) {
+  OV = selecionar(TODOS, document.getElementById('soAtivos').checked, new Date().getFullYear(), a);
+  document.getElementById('ovt').textContent = OV.titulo;
+  document.getElementById('ovq').value = '';
+  document.getElementById('ov').classList.add('aberto'); desenharOv();
+}
+function fecharOv() { document.getElementById('ov').classList.remove('aberto'); OV = null; }
+document.getElementById('ovq').oninput = desenharOv;
+document.getElementById('ov').addEventListener('click', ev => { if (ev.target.id === 'ov') fecharOv(); });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') fecharOv(); });
+document.addEventListener('click', ev => { const el = ev.target.closest('[data-a]'); if (el && !el.closest('.ov')) abrirOv(el.dataset.a); });
+document.getElementById('soAtivos').onchange = desenhar;
+carregar();
+google.script.run.withSuccessHandler(l => { TIPOS = l; if (TODOS.length) desenhar(); }).tiposVeiculo();
+</script>
+</body>
+</html>
