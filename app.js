@@ -22,6 +22,8 @@
     return fetch(C.API_URL, {                      // texto simples: o Google aceita sem "preflight" de CORS
       method: 'POST', redirect: 'follow',
       body: JSON.stringify({ acao: acao, args: args || [], sessao: comSessao && sessao ? sessao.sessao : '' })
+    }, function () {
+      throw new Error('Não consegui falar com o servidor (Apps Script). Confira se a API_URL do config.js é a "URL do app da Web" de Implantar › Gerenciar implantações e se o acesso está como "Qualquer pessoa".');
     }).then(function (r) {
       if (!r.ok) throw new Error('Falha de comunicação (' + r.status + ').');
       return r.json();
@@ -66,7 +68,7 @@
   // ---------- tela de login ----------
   var css = '#lgOv{position:fixed;inset:0;background:#f3f4f6;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif}' +
     '#lgBox{background:#fff;padding:28px 30px;border-radius:12px;box-shadow:0 2px 14px #0002;max-width:360px;width:90%;text-align:center}' +
-    '#lgBox h2{color:#1f7a3f;margin:0 0 6px}#lgBox p{color:#555;font-size:14px}#lgMsg{color:#c62828;font-size:13px;min-height:18px;margin-top:10px}' +
+    '#lgBox h2{color:#0B7BBF;margin:0 0 6px}#lgBox img{height:44px;margin-bottom:8px}#lgBox p{color:#555;font-size:14px}#lgMsg{color:#c62828;font-size:13px;min-height:18px;margin-top:10px}' +
     '#lgBtn{display:flex;justify-content:center;margin-top:14px}' +
     '#lgUser{position:fixed;top:6px;right:10px;z-index:50;font:12px Arial,sans-serif;background:#fff;border-radius:16px;padding:4px 10px;box-shadow:0 1px 4px #0003}' +
     '#lgUser a{color:#c62828;margin-left:8px;cursor:pointer;text-decoration:underline}' +
@@ -91,7 +93,7 @@
       var ov = document.getElementById('lgOv');
       if (!ov) {
         ov = document.createElement('div'); ov.id = 'lgOv';
-        ov.innerHTML = '<div id="lgBox"><h2>' + (C.TITULO || 'Cadastro de Motoristas') + '</h2><p>Entre com a sua conta Google para acessar o sistema.</p>' +
+        ov.innerHTML = '<div id="lgBox"><img src="logo.png" alt="PAMC" onerror="this.remove()"><h2>' + (C.TITULO || 'Cadastro de Motoristas') + '</h2><p>Entre com a sua conta Google para acessar o sistema.</p>' +
           '<div id="lgBtn"></div><div id="lgMsg"></div></div>';
         document.body.appendChild(ov);
       }
