@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR" data-publica="1">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enviar documentos</title>
+<link rel="stylesheet" href="estilo.css">
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script src="comum.js"></script>
+<style>
+  .pub-topo{padding:18px 18px 18px}
+  .pub-topo .in,.pub{max-width:640px;margin:auto}
+  .pub-topo h1{font-size:23px;margin:4px 0 6px}
+  .pub{padding:18px 14px 40px;display:flex;flex-direction:column;gap:14px}
+  .doc-c{background:#fff;border:1px solid #F3C9C9;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px}
+  .doc-c.feito{border-color:#9DCDB0}
+  .arq{height:50px;border-radius:10px;border:1.5px dashed #9DB4E3;background:#F3F6FD;color:var(--azul);font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;font-size:14px}
+  .arq input{position:absolute;inset:0;opacity:0;cursor:pointer}
+</style>
+</head>
+<body>
+<header class="pub-topo"><div class="in"><img src="logo.png" alt="PAMC" class="logo"><span id="emp" class="oculto"></span><h1 id="ola">Enviar documentos</h1><div id="sub" style="font-size:14px;color:var(--suave)"></div></div></header>
+<main class="pub" id="box"><div class="carregando">Carregando...</div></main>
+<script src="cobranca.js"></script>
+</body>
+</html>

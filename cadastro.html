@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR" data-publica="1">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadastro de motorista</title>
+<link rel="stylesheet" href="estilo.css">
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script src="comum.js"></script>
+<style>
+  body{background:var(--fundo)}
+  .pub-topo{padding:16px 18px 14px}
+  .pub-topo .in{max-width:720px;margin:auto;display:flex;flex-direction:column;gap:12px}
+  .passos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .passos i{display:block;height:5px;border-radius:3px;background:#D6E6F2}.passos i.on{background:var(--azul)}
+  .nomes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;font-size:12px;color:var(--suave)}.nomes .on{color:var(--azul-esc);font-weight:600}
+  .pub{max-width:720px;margin:auto;padding:18px 14px 110px;display:flex;flex-direction:column;gap:14px}
+  .pub h1{font-size:22px}
+  .doc-c{background:#fff;border:1px solid var(--linha);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .doc-c.feito{border-color:#9DCDB0}
+  .doc-c b{font-size:15px}
+  .arq{height:48px;border-radius:10px;border:1.5px dashed #9DB4E3;background:#F3F6FD;color:var(--azul);font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;position:relative;font-size:14px}
+  .arq input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .rodape{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--linha);padding:12px 14px 18px}
+  .rodape .in{max-width:720px;margin:auto;display:flex;gap:10px}
+  .rodape .btn{height:50px;font-size:15px}
+</style>
+</head>
+<body>
+<header class="pub-topo"><div class="in">
+  <div class="linha-flex"><img src="logo.png" alt="PAMC" class="logo"><b class="cresce" style="font-size:15px">Cadastro de motorista</b><span id="etapaTxt" style="font-size:13px;color:var(--suave)"></span></div>
+  <div class="passos" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <div class="nomes"><span>Você</span><span>Veículo</span><span>Documentos</span><span>Contrato</span></div>
+</div></header>
+<form id="f" class="pub" novalidate></form>
+<div class="rodape" id="rodape"><div class="in"><button type="button" class="btn sec" id="voltar" style="flex:1">Voltar</button><button type="button" class="btn" id="avancar" style="flex:2">Continuar</button></div></div>
+<script src="cadastro.js"></script>
+</body>
+</html>
