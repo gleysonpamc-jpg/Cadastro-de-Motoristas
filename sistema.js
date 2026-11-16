@@ -585,7 +585,7 @@
     if (!ehAdmin()) { tela.innerHTML = '<div class="vazio"><h2>Sem permissão</h2><p>As configurações são só para administradores.</p></div>'; return; }
     var abas = [['empresa', 'Empresa e assinaturas'], ['prazos', 'Prazos e documentos'], ['usuarios', 'Usuários'], ['contratos', 'Contratos'], ['backup', 'Backup, e-mail e links']];
     tela.innerHTML = '<div class="topo"><h1 class="cresce">Configurações</h1></div><nav class="linha-flex" style="gap:6px;margin-bottom:18px" aria-label="Seções">' +
-      abas.map(function (a) { return '<a class="pill' + (a[0] === aba ? ' on' : '') + '" style="display:inline-flex;align-items:center;text-decoration:none;color:inherit" href="#/config/' + a[0] + '">' + a[1] + '</a>'; }).join('') + '</nav><div id="cfgBox"><div class="carregando">Carregando...</div></div>';
+      abas.map(function (a) { return '<a class="pill' + (a[0] === aba ? ' on' : '') + '"' + (a[0] === aba ? ' aria-current="page"' : '') + ' href="#/config/' + a[0] + '">' + a[1] + '</a>'; }).join('') + '</nav><div id="cfgBox"><div class="carregando">Carregando...</div></div>';
     var box = document.getElementById('cfgBox');
     api('obterConfig', '').then(function (c) {
       CFG = c;
