@@ -47,6 +47,7 @@
     if (ks.some(function (k) { return d[k].e === 'falta'; })) return { cls: 'falta', txt: 'Pendente' };
     return { cls: 'ok', txt: 'Em dia' };
   }
+  var liberadoGo = function (x) { return !ehInativo(x) && !ehRevisao(x) && /^ativ/i.test(String(x.anttSit || '').trim()); };
   var temPendencia = function (x) { var d = x.docs || {}; return Object.keys(d).some(function (k) { return d[k].e !== 'ok'; }); };
   var quando = function (ms) { return ms ? new Date(ms).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''; };
   var porId = function (id) { return (D && D.cadastros || []).filter(function (x) { return x.id === id; })[0]; };
@@ -128,6 +129,8 @@
           '<div class="rotulos">' + tl.map(function (t) { return '<div><b>' + tipos[t] + '</b><span>' + esc(t) + '</span></div>'; }).join('') + '</div>' : '<p class="suave">Nenhum veículo ainda.</p>') + '</section>' +
           '<section class="cartao" aria-labelledby="tAtiv"><h2 id="tAtiv" style="margin-bottom:6px">Atividade recente</h2>' +
           (D.atividade.length ? D.atividade.slice(0, 8).map(function (a) { return '<div class="ativ"><div>' + esc((a.usuario ? a.usuario + ': ' : '') + a.acao.charAt(0).toLowerCase() + a.acao.slice(1) + (a.motorista ? ' · ' + a.motorista : '')) + '</div><div class="q">' + esc(quando(a.quando)) + '</div></div>'; }).join('') : '<p class="suave">Nada ainda.</p>') + '</section>' +
+          '<section class="cartao"><div class="linha-flex"><div class="cresce"><b>Liberados para GO</b><div class="peq suave">Motoristas ativos com ANTT ativa</div></div><span style="font-size:28px;font-weight:700">' + L.filter(liberadoGo).length + '</span></div>' +
+          '<div class="linha-flex" style="margin-top:10px"><button class="btn sec peq" id="verGo">Ver lista</button><button class="btn peq" id="impGoIni">Imprimir</button></div></section>' +
           '<section class="cartao" style="background:var(--azul-cl);border-color:#CCD9F3"><b>Resumo semanal por e-mail</b><div class="peq" style="margin-top:4px;color:#33415E">Toda segunda, às 7h, os administradores recebem o que vence nos próximos 30 dias.</div></section>' +
         '</div></div>';
     function kpi(r, v, d, f) { return '<button class="kpi" data-f="' + f + '"><span class="r">' + r + '</span><span class="v">' + v + '</span><span class="d">' + esc(d) + '</span></button>'; }
@@ -135,6 +138,8 @@
     tela.querySelectorAll('[data-fila]').forEach(function (b) { b.onclick = function () { FILA = b.dataset.fila; FILA_MAX = 40; telaInicio(); }; });
     tela.querySelectorAll('.kpi[data-f]').forEach(function (b) { b.onclick = function () { FILTRO = { q: '', f: b.dataset.f, tipo: '' }; ir('#/motoristas'); }; });
     tela.querySelectorAll('[data-tipo]').forEach(function (b) { b.onclick = function () { FILTRO = { q: '', f: 'ativos', tipo: b.dataset.tipo === 'Sem tipo' ? '' : b.dataset.tipo }; ir('#/motoristas'); }; });
+    document.getElementById('verGo').onclick = function () { FILTRO = { q: '', f: 'go', tipo: '' }; ir('#/motoristas'); };
+    document.getElementById('impGoIni').onclick = function () { imprimirListaGo(L.filter(liberadoGo).sort(function (a, b) { return a.motorista.localeCompare(b.motorista, 'pt-BR'); })); };
     var bi = document.getElementById('buscaIni');
     bi.onkeydown = function (e) { if (e.key === 'Enter') { FILTRO = { q: bi.value, f: 'todos', tipo: '' }; ir('#/motoristas'); } };
   }
@@ -160,6 +165,7 @@
       if (FILTRO.f === 'pend' && (ehInativo(x) || ehRevisao(x) || !temPendencia(x))) return false;
       if (FILTRO.f === 'rev' && !ehRevisao(x)) return false;
       if (FILTRO.f === 'inativos' && !ehInativo(x)) return false;
+      if (FILTRO.f === 'go' && !liberadoGo(x)) return false;
       if (FILTRO.tipo && x.tipo !== FILTRO.tipo) return false;
       if (q && C.semAcento([x.motorista, x.proprietario, x.placa, x.cod, x.cpf, x.tipo].join(' ')).indexOf(q) < 0 && (x.cpf || '').replace(/\D/g, '').indexOf(q.replace(/\D/g, '') || '§') < 0) return false;
       return true;
@@ -167,16 +173,17 @@
   }
   function telaMotoristas(id, aba) {
     var L = D.cadastros, cont = { ativos: L.filter(function (x) { return !ehInativo(x) && !ehRevisao(x); }).length, pend: L.filter(function (x) { return !ehInativo(x) && !ehRevisao(x) && temPendencia(x); }).length,
-      rev: L.filter(ehRevisao).length, inativos: L.filter(ehInativo).length, todos: L.length };
+      rev: L.filter(ehRevisao).length, inativos: L.filter(ehInativo).length, todos: L.length, go: L.filter(liberadoGo).length };
     var tiposUsados = D.tipos.concat(L.map(function (x) { return x.tipo; }).filter(function (t, i, a) { return t && D.tipos.indexOf(t) < 0 && a.indexOf(t) === i; }));
     tela.innerHTML = '<div class="mot"><section class="cartao lista" aria-labelledby="tLst"><div class="cab">' +
       '<div class="linha-flex"><h1 id="tLst" class="cresce" style="font-size:22px">Motoristas</h1>' +
       '<a class="btn sec peq" href="#/importar" title="Importar ou exportar planilha">' + ICONE.sobe + ICONE.baixa + '</a>' +
       '<a class="btn peq" href="#/novo" aria-label="Novo motorista">' + ICONE.mais + '</a></div>' +
       '<label class="busca" style="min-width:0">' + ICONE.busca + '<span class="oculto">Buscar</span><input id="bq" placeholder="Nome, placa, código, CPF ou proprietário" value="' + esc(FILTRO.q) + '"></label>' +
-      '<div class="linha-flex" style="gap:6px">' + [['ativos', 'Ativos'], ['pend', 'Com pendência'], ['rev', 'Revisão'], ['inativos', 'Inativos'], ['todos', 'Todos']].map(function (f) {
+      '<div class="linha-flex" style="gap:6px">' + [['ativos', 'Ativos'], ['pend', 'Com pendência'], ['go', 'Liberados GO'], ['rev', 'Revisão'], ['inativos', 'Inativos'], ['todos', 'Todos']].map(function (f) {
         return '<button class="pill' + (FILTRO.f === f[0] ? ' on' : '') + '" data-f="' + f[0] + '" style="height:30px;font-size:12px">' + f[1] + ' ' + cont[f[0]] + '</button>'; }).join('') +
       '<select id="ftipo" aria-label="Tipo de veículo" style="height:30px;width:auto;font-size:12px;border-radius:15px"><option value="">Todos os tipos</option>' + tiposUsados.map(function (t) { return '<option' + (t === FILTRO.tipo ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join('') + '</select></div>' +
+      (FILTRO.f === 'go' ? '<div class="linha-flex peq" style="background:var(--azul-cl);border-radius:8px;padding:8px 10px"><span class="cresce">ANTT ativa = liberado para rodar e entregar em GO.</span><button class="btn peq" id="impGo">Imprimir lista</button></div>' : '') +
       '<div class="mini suave" id="qtd"></div></div><div class="itens" id="itens"></div></section>' +
       '<section class="cartao ficha" id="ficha" aria-live="polite"></section></div>';
     function lista() {
@@ -193,6 +200,7 @@
     var bq = document.getElementById('bq'); bq.oninput = function () { FILTRO.q = bq.value; lista(); };
     tela.querySelectorAll('.lista [data-f]').forEach(function (b) { b.onclick = function () { FILTRO.f = b.dataset.f; telaMotoristas(id, aba); }; });
     document.getElementById('ftipo').onchange = function (e) { FILTRO.tipo = e.target.value; lista(); };
+    var ig = document.getElementById('impGo'); if (ig) ig.onclick = function () { imprimirListaGo(filtrados()); };
     var ficha = document.getElementById('ficha');
     if (!id) { ficha.innerHTML = '<div class="vazio">Escolha um motorista na lista para ver a ficha completa.</div>'; return; }
     abrirFicha(ficha, id, aba);
@@ -203,7 +211,7 @@
     { k: 'CNH-DATA DE VALIDADE', nome: 'CNH do motorista', tipo: 'CNH', link: 'Link CNH', campos: [['Número CNH', 'Número'], ['CNH-DATA EMISSÃO', 'Emissão', 'date'], ['CNH-DATA DE VALIDADE', 'Validade', 'date']] },
     { k: 'CRLV', nome: 'CRLV (licenciamento)', tipo: 'CRLV', link: 'Link CRLV', campos: [['Número CRLV', 'Número'], ['UF Veículo', 'UF do veículo', 'uf'], ['CRLV Exercício', 'Ano do último CRLV', 'number'], ['CRLV Débito Pendente', 'Há débito pendente (IPVA, taxas ou multas)', 'check']] },
     { k: 'ANTT', nome: 'ANTT (RNTRC)', tipo: 'ANTT', link: 'Link ANTT', campos: [['Número ANTT', 'Número'], ['Situação ANTT', 'Situação', 'antt'], ['Consulta ANTT em', 'Consultada em', 'date']], extra: '<a href="' + ANTT_URL + '" target="_blank" rel="noopener">Consultar no site da ANTT ↗</a>' },
-    { k: 'CVV: VIGILANCIA', nome: 'Vigilância Sanitária', tipo: 'VIGILANCIA', link: 'Link Vigilancia', campos: [['CVV: VIGILANCIA', 'Validade', 'date']] },
+    { k: 'CVV: VIGILANCIA', nome: 'Vigilância Sanitária', tipo: 'VIGILANCIA', link: 'Link Vigilancia', campos: [['Data Vigilância', 'Emissão', 'date'], ['CVV: VIGILANCIA', 'Validade (só se constar no documento)', 'date']] },
     { k: 'NADA COSTA', nome: 'Nada Consta', tipo: 'NADA COSTA', link: 'Link Nada Costa', campos: [['NADA COSTA', 'Entregue', 'check'], ['Data Nada Costa', 'Emissão', 'date']] },
     { k: 'RESIDENCIA', nome: 'Comprovante de residência', tipo: 'RESIDENCIA', link: 'Link Residencia', campos: [['RESIDENCIA', 'Entregue', 'check'], ['Data Residência', 'Emissão', 'date']] },
     { k: 'CNH PROPRIETARIO', nome: 'CNH do proprietário', tipo: 'CNH PROPRIETARIO', link: 'Link CNH Proprietário', soDono: true, campos: [['Número CNH Proprietário', 'Número'], ['CNH Validade Proprietário', 'Validade', 'date']] },
@@ -224,6 +232,7 @@
     else if (c[2] === 'tipo') ctl = '<select name="' + esc(n) + '" id="' + id + '">' + opcoes(D.tipos, val) + '</select>';
     else if (c[2] === 'pix') ctl = '<select name="' + esc(n) + '" id="' + id + '">' + opcoes(['CPF', 'CNPJ', 'E-mail', 'Celular', 'Chave aleatória'], val) + '</select>';
     else if (c[2] === 'antt') ctl = '<select name="' + esc(n) + '" id="' + id + '"><option value="">Não consultada</option>' + opcoes(['Ativa', 'Inativa', 'Suspensa', 'Cancelada'], val, false) + '</select>';
+    else if (c[2] === 'sit3') ctl = '<select name="' + esc(n) + '" id="' + id + '">' + opcoes(['Ativo', 'Inativo', 'Pendente'], val) + '</select>';
     else if (c[2] === 'status') ctl = '<select name="' + esc(n) + '" id="' + id + '">' + opcoes(['Ativo', 'Inativo', 'Revisão'], val, false) + '</select>';
     else if (c[2] === 'area') ctl = '<textarea name="' + esc(n) + '" id="' + id + '" rows="3">' + esc(val) + '</textarea>';
     else ctl = '<input name="' + esc(n) + '" id="' + id + '" type="' + (c[2] || 'text') + '" value="' + esc(val) + '"' + (c[3] ? ' placeholder="' + esc(c[3]) + '"' : '') + '>';
@@ -246,7 +255,7 @@
     ['Motorista', [['COD/FLEX', 'Código Flex'], ['Status', 'Status', 'status'], ['Motorista', 'Nome completo'], ['Data de Nascimento', 'Nascimento', 'date'], ['CPF', 'CPF', 'text', '000.000.000-00'],
       ['Celular', 'Celular', 'tel', '(00) 00000-0000'], ['E-mail', 'E-mail', 'email'], ['Tipo Chave Pix', 'Tipo da chave Pix', 'pix'], ['Chave Pix', 'Chave Pix']]],
     ['Endereço', [['CEP', 'CEP', 'text', '00000-000'], ['Logradouro', 'Rua / avenida'], ['Número Endereço', 'Número'], ['Complemento', 'Complemento'], ['Bairro', 'Bairro'], ['Cidade', 'Cidade'], ['UF', 'UF', 'uf']]],
-    ['Veículo', [['Placa Veículo', 'Placa'], ['Tipo de Veículo', 'Tipo de veículo', 'tipo'], ['Marca/Modelo', 'Marca / modelo'], ['Renavam', 'Renavam'], ['Chassi', 'Chassi'], ['Ano Fabricação', 'Ano de fabricação', 'number'], ['Cor', 'Cor'], ['CARGA MÁXIMA (KG)', 'Carga máxima (kg)', 'number']]]
+    ['Veículo', [['Placa Veículo', 'Placa'], ['Tipo de Veículo', 'Tipo de veículo', 'tipo'], ['Marca/Modelo', 'Marca / modelo'], ['Renavam', 'Renavam'], ['Chassi', 'Chassi'], ['Ano Fabricação', 'Ano de fabricação', 'number'], ['Cor', 'Cor'], ['CARGA MÁXIMA (KG)', 'Carga máxima (kg)', 'number'], ['PAMCARY', 'PAMCARY', 'sit3'], ['Monitoramento', 'Monitoramento', 'sit3']]]
   ];
   var DONO = [['Proprietário', 'Nome ou razão social'], ['CPF Proprietário', 'CPF / CNPJ'], ['Celular Proprietário', 'Celular', 'tel'], ['E-mail Proprietário', 'E-mail', 'email'], ['Tipo Chave Pix Proprietário', 'Tipo da chave Pix', 'pix'],
     ['Chave Pix Proprietário', 'Chave Pix'], ['CEP Proprietário', 'CEP'], ['Logradouro Proprietário', 'Rua / avenida'], ['Número Proprietário', 'Número'], ['Complemento Proprietário', 'Complemento'],
@@ -280,14 +289,15 @@
       var st = ehRevisao(x) ? ['rev', 'Aguardando revisão'] : ehInativo(x) ? ['neutro', 'Inativo'] : ['ok', 'Ativo'];
       var abas = [['docs', 'Documentos' + (pend ? ' · ' + pend + ' pendente' + (pend > 1 ? 's' : '') : '')], ['dados', 'Dados'], ['contrato', 'Contrato'], ['hist', 'Histórico']];
       box.innerHTML = '<div class="cab"><div class="linha-flex" style="align-items:flex-start;gap:16px"><span class="av g">' + esc(iniciais(v.Motorista)) + '</span><div class="cresce">' +
-        '<div class="linha-flex"><h2 style="font-size:23px">' + esc(v.Motorista) + '</h2><span class="chip ' + st[0] + '">' + st[1] + '</span>' + (v['COD/FLEX'] ? '<span class="chip neutro">Código ' + esc(v['COD/FLEX']) + '</span>' : '') + '</div>' +
+        '<div class="linha-flex"><h2 style="font-size:23px">' + esc(v.Motorista) + '</h2><span class="chip ' + st[0] + '">' + st[1] + '</span>' + (v['COD/FLEX'] ? '<span class="chip neutro">Código ' + esc(v['COD/FLEX']) + '</span>' : '') +
+        (/^ativ/i.test(String(v['Situação ANTT'] || '').trim()) ? '<span class="chip ok">Liberado para GO</span>' : '<span class="chip falta" title="Só com a ANTT ativa">Não liberado para GO</span>') + '</div>' +
         '<div class="suave peq" style="margin-top:4px">' + esc([v['Tipo de Veículo'], v['Placa Veículo'], v['Marca/Modelo'], v['Ano Fabricação']].filter(Boolean).join(' · ') || 'Veículo não informado') +
         ' · Proprietário: ' + esc(donoOutro(v) ? v['Proprietário'] : 'o próprio motorista') + '</div></div></div>' +
         (ehRevisao(x) ? '<div class="revisao"><div class="cresce"><b>Cadastro recebido pelo link.</b> Confira os dados e os documentos, informe o Código Flex e aprove.</div>' +
           '<label class="campo" style="width:150px;color:inherit">Código Flex<input id="codAprov" inputmode="numeric"></label><button class="btn" id="bAprov">Aprovar</button></div>' : '') +
         '<div class="linha-flex" style="gap:8px">' +
           '<button class="btn" id="bCob">Cobrar documentos' + (pend ? ' (' + pend + ')' : '') + '</button>' +
-          '<button class="btn sec" id="bFicha">Imprimir ficha</button><button class="btn sec" id="bCarta">Carta de pendências</button>' +
+          '<button class="btn sec" id="bFicha">Imprimir ficha (3 folhas)</button><button class="btn sec" id="bCarta">Carta de pendências</button>' +
           '<button class="btn sec" id="bZip">' + ICONE.baixa + 'Arquivos (ZIP)</button>' +
           '<button class="btn sec" id="bPdf">Salvar ficha em PDF no Drive</button>' +
           (ehAdmin() ? '<button class="btn sec" id="bExc" style="color:var(--verm)">Excluir</button>' : '') + '</div>' +
@@ -420,6 +430,20 @@
     }).catch(function (e) { corpo.innerHTML = '<div class="vazio">' + esc(e.message) + '</div>'; });
   }
 
+  // Lista para imprimir: motoristas liberados para rodar / entregar em GO (ANTT ativa)
+  function imprimirListaGo(lista) {
+    var logo = '<img src="' + (D.logo || new URL('logo.png', location.href).href) + '" style="max-height:44px;max-width:180px">';
+    var linhas = lista.map(function (x, i) {
+      var a = x.docs && x.docs.ANTT, aviso = a && a.e !== 'ok' && a.m ? curto(a.m) : '';
+      return '<tr><td>' + (i + 1) + '</td><td>' + esc(x.cod || '—') + '</td><td><b>' + esc(x.motorista) + '</b>' + (x.proprietario && C.semAcento(x.proprietario) !== C.semAcento(x.motorista) ? '<br><small>Dono: ' + esc(x.proprietario) + '</small>' : '') + '</td>' +
+        '<td>' + esc(x.placa || '—') + '</td><td>' + esc(x.tipo || '—') + '</td><td>' + esc(x.anttNum || '—') + '</td><td>' + esc(x.anttConsulta || '—') + (aviso ? '<br><small style="color:#B45309">' + esc(aviso) + '</small>' : '') + '</td></tr>';
+    }).join('');
+    var css = '<style>@page{size:A4;margin:10mm}body{font-family:Arial,sans-serif;color:#111}table{width:100%;border-collapse:collapse;font-size:11px}th{background:#0B7BBF;color:#fff;text-align:left;padding:5px 6px}td{border-bottom:1px solid #ccc;padding:5px 6px;vertical-align:top}tr{page-break-inside:avoid}</style>';
+    C.imprimir(css + '<div style="padding:4px 2px">' + logo + '<div style="height:4px;background:linear-gradient(90deg,#D61F38,#8E151E);margin:8px 0 10px"></div>' +
+      '<h1 style="font-size:17px;margin:0 0 4px">Motoristas liberados para rodar e entregar em GO</h1>' +
+      '<p style="font-size:12px;margin:0 0 10px;color:#444">Critério: motorista ativo com ANTT (RNTRC) ativa · ' + lista.length + ' motorista(s) · emitido em ' + new Date().toLocaleDateString('pt-BR') + '</p>' +
+      (lista.length ? '<table><thead><tr><th>#</th><th>Código</th><th>Motorista</th><th>Placa</th><th>Tipo</th><th>Nº ANTT</th><th>Consultada em</th></tr></thead><tbody>' + linhas + '</tbody></table>' : '<p>Nenhum motorista com ANTT ativa.</p>') + '</div>');
+  }
   function cartaHtml(m) {
     var itens = m.pendencias.map(function (t) { return '<div style="display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #ddd;font-size:13px"><span style="width:11px;height:11px;border:1px solid #444;flex:none"></span>' + esc(t) + '</div>'; });
     if (!itens.length) itens.push('<div style="padding:10px;text-align:center;color:#1F5A33">Nenhuma pendência — documentação em dia.</div>');
@@ -639,9 +663,9 @@
     var p = CFG.prazos || {}, tipos = CFG.tipos.slice(), cal = null;
     box.innerHTML = '<div class="duas"><section class="cartao prin" id="calBox"><div class="carregando">Carregando calendário...</div></section><div class="lat">' +
       '<section class="cartao"><h2 style="margin-bottom:12px">Validades e prazos (dias)</h2><div style="display:flex;flex-direction:column;gap:10px">' +
-      [['NADA COSTA', 'Nada Consta vale'], ['RESIDENCIA', 'Comprovante de residência vale'], ['ANTT', 'Reconsultar ANTT a cada'], ['COBRANCA', 'Link de cobrança vale']].map(function (x) {
+      [['NADA COSTA', 'Nada Consta vale'], ['RESIDENCIA', 'Comprovante de residência vale'], ['VIGILANCIA', 'Vigilância Sanitária vale'], ['ANTT', 'Reconsultar ANTT a cada'], ['COBRANCA', 'Link de cobrança vale']].map(function (x) {
         return '<label class="linha-flex" style="justify-content:space-between;font-size:14px">' + x[1] + '<input type="number" min="0" data-p="' + x[0] + '" value="' + (p[x[0]] != null ? p[x[0]] : (x[0] === 'COBRANCA' ? 7 : 0)) + '" style="width:90px"></label>'; }).join('') +
-      '</div><p class="mini suave">0 = sem prazo (Nada Consta e residência valem só por estarem entregues).</p><div class="acoes-dir"><button class="btn" id="pSalvar">Salvar prazos</button></div></section>' +
+      '</div><p class="mini suave">Contados a partir da data de emissão. 0 = sem prazo (Nada Consta, residência e Vigilância valem só por estarem entregues).</p><div class="acoes-dir"><button class="btn" id="pSalvar">Salvar prazos</button></div></section>' +
       '<section class="cartao"><h2 style="margin-bottom:12px">Tipos de veículo</h2><div id="tipos"></div><button class="btn sec peq" id="tAdd">' + ICONE.mais + 'Adicionar tipo</button><div class="acoes-dir"><button class="btn" id="tSalvar">Salvar tipos</button></div></section></div></div>';
     function desTipos() {
       document.getElementById('tipos').innerHTML = tipos.map(function (t, i) { return '<div class="linha-flex" style="margin-bottom:6px"><input value="' + esc(t) + '" data-t="' + i + '" aria-label="Tipo" class="cresce" style="width:auto;flex:1"><button class="ic-btn" data-dt="' + i + '" aria-label="Remover tipo">✕</button></div>'; }).join('');
