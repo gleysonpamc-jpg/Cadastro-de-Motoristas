@@ -11,7 +11,7 @@
 
   f.innerHTML =
     '<section data-e="1"><h1>Seus dados</h1><p class="suave peq">Os campos com * são obrigatórios. O resto você pode completar depois.</p><div class="grade">' +
-      inp('Motorista', 'Nome completo *', 'text', '', ' autocomplete="name"') + inp('Data de Nascimento', 'Data de nascimento', 'date') + inp('CPF', 'CPF *', 'text', '000.000.000-00') +
+      inp('Motorista', 'Nome completo *', 'text', '', ' autocomplete="name"') + inp('Data de Nascimento', 'Data de nascimento', 'date') + inp('CPF', 'CPF ou CNPJ *', 'text', 'CPF ou CNPJ') +
       inp('Celular', 'Celular (WhatsApp) *', 'tel', '(00) 00000-0000') + inp('E-mail', 'E-mail', 'email', '', ' autocomplete="email"') + sel('Tipo Chave Pix', 'Tipo da chave Pix', PIX) + inp('Chave Pix', 'Chave Pix') +
     '</div><h2 class="bloco-tit" style="margin-top:14px">Endereço</h2><div class="grade">' +
       inp('CEP', 'CEP', 'text', '00000-000') + inp('Logradouro', 'Rua / avenida') + inp('Número Endereço', 'Número') + inp('Complemento', 'Complemento') + inp('Bairro', 'Bairro') + inp('Cidade', 'Cidade') + sel('UF', 'UF', C.UFS) +
@@ -61,11 +61,12 @@
   }
   function faltam(e) {
     var d = dados(), l = [];
-    if (e === 1) { if (!d.Motorista) l.push('nome'); if (d.CPF.replace(/\D/g, '').length !== 11) l.push('CPF'); if (d.Celular.replace(/\D/g, '').length < 10) l.push('celular'); }
+    if (e === 1) { if (!d.Motorista) l.push('nome'); if (!d.CPF) l.push('CPF ou CNPJ'); else if (!C.docValido(d.CPF)) l.push('CPF ou CNPJ válido (confira os números)'); if (d.Celular.replace(/\D/g, '').length < 10) l.push('celular'); }
     if (e === 2) {
       if (!d['Placa Veículo']) l.push('placa');
       if (!mesmo.checked) [['Proprietário', 'nome do proprietário'], ['CPF Proprietário', 'CPF/CNPJ do proprietário'], ['CEP Proprietário', 'CEP do proprietário'], ['Logradouro Proprietário', 'rua do proprietário'], ['Bairro Proprietário', 'bairro do proprietário'], ['Cidade Proprietário', 'cidade do proprietário'], ['UF Proprietário', 'UF do proprietário']]
         .forEach(function (p) { if (!d[p[0]]) l.push(p[1]); });
+      if (!mesmo.checked && d['CPF Proprietário'] && !C.docValido(d['CPF Proprietário'])) l.push('CPF ou CNPJ do proprietário válido (confira os números)');
     }
     return l;
   }
