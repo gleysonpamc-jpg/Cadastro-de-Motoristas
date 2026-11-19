@@ -304,7 +304,7 @@
         '<div class="suave peq" style="margin-top:4px">' + esc([v['Tipo de Veículo'], v['Placa Veículo'], v['Marca/Modelo'], v['Ano Fabricação']].filter(Boolean).join(' · ') || 'Veículo não informado') +
         ' · Proprietário: ' + esc(donoOutro(v) ? v['Proprietário'] : 'o próprio motorista') + '</div></div></div>' +
         (ehRevisao(x) ? '<div class="revisao"><div class="cresce"><b>Cadastro recebido pelo link.</b> Confira os dados e os documentos, informe o Código Flex e aprove.</div>' +
-          '<label class="campo" style="width:150px;color:inherit">Código Flex<input id="codAprov" inputmode="numeric"></label><button class="btn" id="bAprov">Aprovar</button></div>' : '') +
+          '<label class="campo" style="width:150px;color:inherit">Código Flex<input id="codAprov" inputmode="numeric" style="font-size:17px;font-weight:700"></label><button class="btn" id="bAprov">Aprovar</button></div>' : '') +
         '<div class="linha-flex" style="gap:8px">' +
           '<button class="btn" id="bCob">Cobrar documentos' + (pend ? ' (' + pend + ')' : '') + '</button>' +
           '<button class="btn sec" id="bFicha">Imprimir ficha (2 folhas)</button><button class="btn sec" id="bCarta">Carta de pendências</button>' +
@@ -395,7 +395,7 @@
   function abaDados(corpo, id, v) {
     corpo.innerHTML = '<form id="fDados">' + formCadastro(v) + '<div class="acoes-dir"><button class="btn" type="submit">Salvar alterações</button></div></form>';
     var f = document.getElementById('fDados'); ligarFormCadastro(f);
-    (function (inp) { var a = document.createElement('span'); a.className = 'mini'; a.innerHTML = '<a href="#">Ver códigos disponíveis</a>'; inp.parentNode.appendChild(a); a.firstChild.onclick = function (e) { e.preventDefault(); abrirCodigos(inp); }; })(f.querySelector('[name="COD/FLEX"]'));
+    (function (inp) { var a = document.createElement('span'); a.className = 'mini'; a.innerHTML = '<a href="#">Ver códigos disponíveis</a>'; inp.parentNode.appendChild(a); a.firstChild.onclick = function (e) { e.preventDefault(); a.remove(); ligarCodigo(inp, false); }; })(f.querySelector('[name="COD/FLEX"]'));
     f.onsubmit = function (e) {
       e.preventDefault();
       var d = dadosDoForm(f); if (!d.Motorista) { C.aviso('Informe o nome do motorista.', 'erro'); return; }
@@ -512,12 +512,29 @@
       if (alvo) j.el.querySelectorAll('[data-cod]').forEach(function (b) { b.onclick = function () { alvo.value = b.dataset.cod; j.fechar(); C.aviso('Código ' + b.dataset.cod + ' escolhido.', 'ok'); }; });
     }).catch(function (e) { j.el.innerHTML = '<div class="vazio">' + esc(e.message) + '</div>'; });
   }
-  function ligarCodigo(input) {
+  // Mostra, logo abaixo do campo, TODOS os códigos disponíveis (livres e os de inativos) só com os 2 últimos dígitos.
+  // Clicar num deles preenche o código completo. preencher = já coloca o próximo disponível no campo.
+  function ligarCodigo(input, preencher) {
     if (!input) return;
-    var dica = document.createElement('span'); dica.className = 'mini'; dica.innerHTML = '<a href="#" data-vercod>Ver códigos disponíveis</a>';
-    input.parentNode.appendChild(dica);
-    dica.querySelector('[data-vercod]').onclick = function (e) { e.preventDefault(); abrirCodigos(input); };
-    if (!input.value) api('codigosDisponiveis', '').then(function (r) { if (!input.value) { input.value = r.proximo; input.title = 'Próximo código disponível'; } }).catch(function () {});
+    var rotulo = input.closest('label') || input.parentNode;
+    var box = document.createElement('div');
+    box.className = 'cod-disp';
+    box.style.cssText = 'flex-basis:100%;width:100%;grid-column:1/-1;margin-top:8px;font-size:12px';
+    box.innerHTML = '<span class="suave">Carregando códigos disponíveis...</span>';
+    rotulo.parentNode.insertBefore(box, rotulo.nextSibling);
+    api('codigosDisponiveis', '').then(function (r) {
+      var disp = r.lista.filter(function (x) { return x.s !== 'uso'; });
+      if (preencher !== false && !input.value) input.value = r.proximo;
+      function marcar() { box.querySelectorAll('[data-cod]').forEach(function (b) { var on = b.dataset.cod === input.value.trim(); b.style.outline = on ? '2px solid var(--azul)' : ''; b.setAttribute('aria-pressed', on); }); }
+      box.innerHTML = '<div style="margin-bottom:6px;color:inherit"><b>Disponíveis (' + disp.length + ')</b> · clique para usar · <span class="chip ok" style="padding:1px 6px">livre</span> <span class="chip vence" style="padding:1px 6px">era de inativo</span> · <a href="#" data-mapa>ver mapa completo</a></div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:5px">' + disp.map(function (x) {
+          return '<button type="button" data-cod="' + esc(x.cod) + '" class="chip ' + (x.s === 'inativo' ? 'vence' : 'ok') + '" style="border:0;cursor:pointer;min-width:38px;font-size:13px;padding:5px 8px" title="' +
+            esc(x.cod + (x.s === 'inativo' ? ' · era de ' + x.nome + ' (inativo)' : ' · livre')) + '" aria-label="Usar o código ' + esc(x.cod) + '">' + esc(x.cod.slice(-2)) + '</button>';
+        }).join('') + '</div>';
+      box.querySelectorAll('[data-cod]').forEach(function (b) { b.onclick = function () { input.value = b.dataset.cod; marcar(); input.dispatchEvent(new Event('input')); }; });
+      box.querySelector('[data-mapa]').onclick = function (e) { e.preventDefault(); abrirCodigos(input); };
+      input.addEventListener('input', marcar); marcar();
+    }).catch(function (e) { box.innerHTML = '<span class="suave">Não consegui carregar os códigos: ' + esc(e.message) + '</span>'; });
   }
 
   // ---------------------------------------------------------------- cobrança
