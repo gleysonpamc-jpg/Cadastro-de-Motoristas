@@ -238,7 +238,7 @@
     if (c[2] === 'uf') ctl = '<select name="' + esc(n) + '" id="' + id + '">' + opcoes(C.UFS, String(val).toUpperCase()) + '</select>';
     else if (c[2] === 'tipo') ctl = '<select name="' + esc(n) + '" id="' + id + '">' + opcoes(D.tipos, val) + '</select>';
     else if (c[2] === 'pix') ctl = '<select name="' + esc(n) + '" id="' + id + '">' + opcoes(['CPF', 'CNPJ', 'E-mail', 'Celular', 'Chave aleatória'], val) + '</select>';
-    else if (c[2] === 'antt') ctl = '<select name="' + esc(n) + '" id="' + id + '"><option value="">Não consultada</option>' + opcoes(['Ativa', 'Inativa', 'Suspensa', 'Cancelada'], val, false) + '</select>';
+    else if (c[2] === 'antt') ctl = '<select name="' + esc(n) + '" id="' + id + '"><option value="">Não consultada</option>' + opcoes(['Ativa', 'Pendente', 'Suspensa', 'Suspensa cautelarmente', 'Suspensa administrativamente', 'Vencida', 'Cancelada', 'Inativa'], val, false) + '</select>';
     else if (c[2] === 'simnao') ctl = '<select name="' + esc(n) + '" id="' + id + '">' + opcoes(['Sim', 'Não'], val) + '</select>';
     else if (c[2] === 'sit3') ctl = '<select name="' + esc(n) + '" id="' + id + '">' + opcoes(['Ativo', 'Inativo', 'Pendente'], val) + '</select>';
     else if (c[2] === 'status') ctl = '<select name="' + esc(n) + '" id="' + id + '">' + opcoes(['Ativo', 'Inativo', 'Revisão'], val, false) + '</select>';
