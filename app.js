@@ -157,12 +157,16 @@
   // ---------- início: sessão guardada? confere no servidor antes de liberar a tela ----------
   var guardada = lerSessao();
   if (guardada) {
+    // libera a tela na hora com a sessão guardada (a primeira busca de dados já confere o login no servidor);
+    // em paralelo, confere o perfil e atualiza se tiver mudado
     sessao = guardada;
+    if (aplicarPerfil()) liberar();
     postar('quemSou', [], true).then(function (u) {
       if (!u) throw Object.assign(new Error('Sessão encerrada.'), { login: true });
+      var mudou = u.perfil !== sessao.perfil;
       sessao.perfil = u.perfil; sessao.nome = u.nome; gravarSessao(sessao);
-      if (aplicarPerfil()) liberar();
-    }).catch(function (e) { limparSessao(); mostrarLogin(e.login ? '' : e.message); });
+      if (mudou) location.reload();
+    }).catch(function (e) { if (e.login) { limparSessao(); recarregar = true; mostrarLogin(''); } });
   } else {
     mostrarLogin('');
   }

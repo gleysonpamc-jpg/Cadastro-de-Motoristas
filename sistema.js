@@ -839,6 +839,26 @@
     document.getElementById('rsTeste').onclick = function (e) { var b = e.currentTarget; C.ocupado(b, true, 'Enviando...'); api('enviarResumoTeste', '').then(function (r) { C.aviso('Resumo enviado para ' + r.para + '.', 'ok'); }).catch(erro).then(function () { C.ocupado(b, false); }); };
   }
 
+  // ---------------------------------------------------------------- atualização automática
+  // Busca novidades a cada 1 minuto (com a aba aberta) e ao voltar para a aba. Só redesenha a tela quando
+  // ninguém está digitando e não há uma ficha aberta, para não atrapalhar o que você estiver fazendo.
+  var ultimaCarga = Date.now(), buscando = false;
+  function atualizarSozinho() {
+    if (buscando || !D || document.visibilityState !== 'visible') return;
+    var revAntes = D.cadastros.filter(ehRevisao).length;
+    buscando = true;
+    carregar().then(function () {
+      ultimaCarga = Date.now();
+      var rev = D.cadastros.filter(ehRevisao).length;
+      if (rev > revAntes) C.aviso((rev - revAntes) + ' cadastro(s) novo(s) recebido(s) pelo link.', 'ok');
+      var el = document.activeElement, digitando = el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName);
+      var p = (location.hash || '#/inicio').replace(/^#\/?/, '').split('/');
+      if (!digitando && !document.querySelector('.jan-fundo') && ((p[0] || 'inicio') === 'inicio' || (p[0] === 'motoristas' && !p[1]))) rota();
+    }).catch(function () {}).then(function () { buscando = false; });
+  }
+  setInterval(function () { if (Date.now() - ultimaCarga > 55000) atualizarSozinho(); }, 15000);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && Date.now() - ultimaCarga > 20000) atualizarSozinho(); });
+
   // ---------------------------------------------------------------- início
-  carregar().then(rota).catch(function (e) { if (!e.login) tela.innerHTML = '<div class="vazio">Não consegui carregar: ' + esc(e.message) + '</div>'; });
+  carregar().then(function () { ultimaCarga = Date.now(); }).then(rota).catch(function (e) { if (!e.login) tela.innerHTML = '<div class="vazio">Não consegui carregar: ' + esc(e.message) + '</div>'; });
 })();
