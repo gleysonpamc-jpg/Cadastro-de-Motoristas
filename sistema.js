@@ -168,6 +168,7 @@
       if (FILTRO.f === 'inativos' && !ehInativo(x)) return false;
       if (FILTRO.f === 'go' && !liberadoGo(x)) return false;
       if (FILTRO.f === 'equip' && !temEquip(x)) return false;
+      if (FILTRO.f === 'rep' && !(x.repetidos && x.repetidos.length)) return false;
       if (FILTRO.tipo && x.tipo !== FILTRO.tipo) return false;
       if (q && C.semAcento([x.motorista, x.proprietario, x.placa, x.cod, x.cpf, x.tipo].join(' ')).indexOf(q) < 0 && (x.cpf || '').replace(/\D/g, '').indexOf(q.replace(/\D/g, '') || '§') < 0) return false;
       return true;
@@ -175,7 +176,7 @@
   }
   function telaMotoristas(id, aba) {
     var L = D.cadastros, cont = { ativos: L.filter(function (x) { return !ehInativo(x) && !ehRevisao(x); }).length, pend: L.filter(function (x) { return !ehInativo(x) && !ehRevisao(x) && temPendencia(x); }).length,
-      rev: L.filter(ehRevisao).length, inativos: L.filter(ehInativo).length, todos: L.length, go: L.filter(liberadoGo).length, equip: L.filter(temEquip).length };
+      rev: L.filter(ehRevisao).length, inativos: L.filter(ehInativo).length, todos: L.length, go: L.filter(liberadoGo).length, equip: L.filter(temEquip).length, rep: L.filter(function (x) { return x.repetidos && x.repetidos.length; }).length };
     var tiposUsados = D.tipos.concat(L.map(function (x) { return x.tipo; }).filter(function (t, i, a) { return t && D.tipos.indexOf(t) < 0 && a.indexOf(t) === i; }));
     tela.innerHTML = '<div class="mot"><section class="cartao lista" aria-labelledby="tLst"><div class="cab">' +
       '<div class="linha-flex"><h1 id="tLst" class="cresce" style="font-size:22px">Motoristas</h1>' +
@@ -183,7 +184,7 @@
       '<a class="btn sec peq" href="#/importar" title="Importar ou exportar planilha">' + ICONE.sobe + ICONE.baixa + '</a>' +
       '<a class="btn peq" href="#/novo" aria-label="Novo motorista">' + ICONE.mais + '</a></div>' +
       '<label class="busca" style="min-width:0">' + ICONE.busca + '<span class="oculto">Buscar</span><input id="bq" placeholder="Nome, placa, código, CPF ou proprietário" value="' + esc(FILTRO.q) + '"></label>' +
-      '<div class="linha-flex" style="gap:6px">' + [['ativos', 'Ativos'], ['pend', 'Com pendência'], ['go', 'Liberados GO'], ['equip', 'Celular/chip empresa'], ['rev', 'Revisão'], ['inativos', 'Inativos'], ['todos', 'Todos']].map(function (f) {
+      '<div class="linha-flex" style="gap:6px">' + [['ativos', 'Ativos'], ['pend', 'Com pendência'], ['go', 'Liberados GO'], ['equip', 'Celular/chip empresa'], ['rev', 'Revisão'], ['rep', 'Repetidos'], ['inativos', 'Inativos'], ['todos', 'Todos']].filter(function (f) { return f[0] !== 'rep' || cont.rep || FILTRO.f === 'rep'; }).map(function (f) {
         return '<button class="pill' + (FILTRO.f === f[0] ? ' on' : '') + '" data-f="' + f[0] + '" style="height:30px;font-size:12px">' + f[1] + ' ' + cont[f[0]] + '</button>'; }).join('') +
       '<select id="ftipo" aria-label="Tipo de veículo" style="height:30px;width:auto;font-size:12px;border-radius:15px"><option value="">Todos os tipos</option>' + tiposUsados.map(function (t) { return '<option' + (t === FILTRO.tipo ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join('') + '</select></div>' +
       (FILTRO.f === 'equip' ? '<div class="linha-flex peq" style="background:var(--azul-cl);border-radius:8px;padding:8px 10px"><span class="cresce">Motoristas com celular e/ou chip da empresa.</span><button class="btn peq" id="impEq">Imprimir lista</button></div>' : '') +
@@ -197,7 +198,7 @@
         var p = pior(x);
         return '<a class="m' + (x.id === id ? ' on' : '') + '" href="#/motoristas/' + encodeURIComponent(x.id) + '/' + aba + '"><span class="av">' + esc(iniciais(x.motorista)) + '</span>' +
           '<span class="cresce"><span class="n" style="display:block">' + esc(x.motorista) + '</span><span class="i">' + esc([x.cod || 'sem código', x.tipo, x.placa].filter(Boolean).join(' · ')) +
-          (x.proprietario && C.semAcento(x.proprietario) !== C.semAcento(x.motorista) ? '<br>Dono: ' + esc(x.proprietario) : '') + '</span></span><span class="chip ' + p.cls + '">' + esc(p.txt) + '</span></a>';
+          (x.proprietario && C.semAcento(x.proprietario) !== C.semAcento(x.motorista) ? '<br>Dono: ' + esc(x.proprietario) : '') + (x.repetidos && x.repetidos.length ? '<br><b style="color:var(--av)">Repetido (mesmo CPF/CNPJ)</b>' : '') + '</span></span><span class="chip ' + p.cls + '">' + esc(p.txt) + '</span></a>';
       }).join('') : '<div class="vazio">Nenhum cadastro com esse filtro.</div>';
     }
     lista();
@@ -303,6 +304,9 @@
         (/^ativ/i.test(String(v['Situação ANTT'] || '').trim()) ? '<span class="chip ok">Liberado para GO</span>' : '<span class="chip falta" title="Só com a ANTT ativa">Não liberado para GO</span>') + '</div>' +
         '<div class="suave peq" style="margin-top:4px">' + esc([v['Tipo de Veículo'], v['Placa Veículo'], v['Marca/Modelo'], v['Ano Fabricação']].filter(Boolean).join(' · ') || 'Veículo não informado') +
         ' · Proprietário: ' + esc(donoOutro(v) ? v['Proprietário'] : 'o próprio motorista') + '</div></div></div>' +
+        (x.repetidos && x.repetidos.length ? '<div class="revisao" style="background:var(--av-bg);color:var(--av)"><div class="cresce"><b>Atenção: cadastro repetido.</b> O mesmo CPF/CNPJ está também em: ' +
+          x.repetidos.map(function (o) { return '<a href="#/motoristas/' + encodeURIComponent(o.id) + '/docs">' + esc(o.nome) + ' (' + esc(o.cod || 'sem código') + ' · ' + esc(o.status || '') + (o.cadastro ? ' · ' + esc(o.cadastro) : '') + ')</a>'; }).join(', ') +
+          '. Confira e exclua o que sobrou.</div></div>' : '') +
         (ehRevisao(x) ? '<div class="revisao"><div class="cresce"><b>Cadastro recebido pelo link.</b> Confira os dados e os documentos, informe o Código Flex e aprove.</div>' +
           '<label class="campo" style="width:150px;color:inherit">Código Flex<input id="codAprov" inputmode="numeric" style="font-size:17px;font-weight:700"></label><button class="btn" id="bAprov">Aprovar</button></div>' : '') +
         '<div class="linha-flex" style="gap:8px">' +
